@@ -4,6 +4,7 @@ import cmu.isr.utils.combinations
 import cmu.isr.utils.pretty
 import net.automatalib.automata.fsa.impl.compact.CompactDFA
 import net.automatalib.words.Word
+import net.automatalib.words.impl.Alphabets
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
@@ -74,7 +75,7 @@ class SolutionIterator(
       logger.info("\t$p")
 
     // remove those absolutely unused controllable and observable events which generates the initial solution
-    initSup = problem.removeUnnecessary(sup)
+    initSup = if (problem.optimization) problem.removeUnnecessary(sup) else sup
 
     preferredIterator = PreferredBehIterator(problem.preferredMap)
 
@@ -164,7 +165,7 @@ class SolutionIterator(
 
   private fun minimize(preferred: Collection<Word<String>>): Collection<CompactSupDFA<String>> {
     return when (alg) {
-      Algorithms.Pareto -> minimizePareto(preferred)
+      Algorithms.Pareto -> if (problem.optimization) minimizePareto(preferred) else minimizeParetoNonOpt(preferred)
       Algorithms.Fast -> minimizeFast(preferred)
     }
   }
@@ -249,6 +250,55 @@ class SolutionIterator(
 
       if (minSups.isEmpty())
         minSups = lastNonEmptySups
+    }
+
+    return minSups
+  }
+
+  private fun minimizeParetoNonOpt(preferred: Collection<Word<String>>): Collection<CompactSupDFA<String>> {
+    val eventsMap = mutableMapOf<Priority, Pair<Collection<String>, Collection<String>>>()
+    for (p in listOf(Priority.P3, Priority.P2, Priority.P1)) {
+      eventsMap[p] = Pair(
+        problem.controllableMap[p]?.intersect(initSup.controllable.toSet()) ?: emptySet(),
+        problem.observableMap[p]?.intersect(initSup.observable.toSet()) ?: emptySet()
+      )
+    }
+
+    // the list of combinations of events that minimize the controller s.t. the given preferred behavior is satisfied
+    var minSups = mutableListOf(initSup)
+    var lastNonEmptySups = minSups
+    var sups = mutableListOf(initSup)
+    var lastSups = sups
+    for (p in listOf(Priority.P3, Priority.P2, Priority.P1)) {
+      val (canRemoveCtrl, canRemoveObsrv) = eventsMap[p]!!
+      var removedCounter = 0
+
+      while (removedCounter++ < canRemoveCtrl.size + canRemoveObsrv.size) {
+        lastNonEmptySups = minSups
+        minSups = mutableListOf()
+        lastSups = sups
+        sups = mutableListOf()
+        for ((controllable, observable) in removeOneEventFrom(lastSups, canRemoveCtrl, canRemoveObsrv)) {
+          logger.debug("Try removing the following events:")
+          logger.debug("Controllable: ${initSup.controllable - controllable.toSet()}")
+          logger.debug("Observable: ${initSup.observable - observable.toSet()}")
+
+          val sup = problem.supervisorySynthesize(controllable, observable)
+          synthesisCounter++
+          if (sup == null) {
+            // Add an empty supervisor
+            sups.add(CompactDFA(Alphabets.fromCollection(observable)).asSupDFA(controllable, observable))
+            continue
+          }
+          sups.add(sup)
+          // add minimization if preferred behavior maintained
+          if (problem.satisfyPreferred(sup, preferred)) {
+            minSups.add(sup)
+          }
+        }
+        if (minSups.isEmpty())
+          minSups = lastNonEmptySups
+      }
     }
 
     return minSups

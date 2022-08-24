@@ -6,7 +6,7 @@
   "safety": ["p.lts"],
   "method": "oasis",
   "options": {
-    "progress": ["v.1.done", "v.2.done", "v.3.done", "v.4.done"],
+    "progress": ["v.1.done", "v.2.done"],
     "preferred": [ ["select", "back", "select", "vote", "confirm"] ]
   }
 }

@@ -38,6 +38,8 @@ class SupervisoryRobustifier(
 ) : BaseRobustifier<Int, String>(sys, sysInputs, devEnv, envInputs, safety, safetyInputs),
     Closeable
 {
+  var optimization: Boolean = true
+
   private val logger = LoggerFactory.getLogger(javaClass)
   private val plant = parallelComposition(sys, sysInputs, devEnv, envInputs)
   private val prop: CompactDFA<String>
@@ -78,7 +80,7 @@ class SupervisoryRobustifier(
    */
   fun supervisorySynthesize(controllable: Collection<String>, observable: Collection<String>): CompactSupDFA<String>? {
     val key = Pair(controllable, observable)
-    if (key !in synthesisCache) {
+    if (!optimization || key !in synthesisCache) {
       val g = plant.asSupDFA(controllable, observable)
       val p = prop.asSupDFA(controllable, observable)
 

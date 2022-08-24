@@ -45,6 +45,13 @@ class Robustify : CliktCommand(help = "Robustify a system design using superviso
     val startTime = System.currentTimeMillis()
 
     val (robustifier, sols) = when (config.method) {
+      "supervisory-non-opt" -> {
+        val robustifer = buildSupervisory(config)
+        robustifer.optimization = false
+        val sols = robustifer.synthesize(Algorithms.valueOf(config.options.algorithm)).toList()
+        robustifer.close()
+        Pair(robustifer, sols)
+      }
       "supervisory" -> {
         val robustifer = buildSupervisory(config)
         val sols = robustifer.synthesize(Algorithms.valueOf(config.options.algorithm)).toList()

@@ -1,11 +1,11 @@
 
 const NoBody = 0
-const VOTERS = 4
+const VOTERS = 2
 
-range N_VOTER = 1..4
+range N_VOTER = 1..2
 range N_EO = 1..1
 
-range WHO = NoBody..5
+range WHO = NoBody..3
 
 P = VOTE[NoBody][NoBody][NoBody],
 VOTE[in:WHO][sel:WHO][v:WHO] = (

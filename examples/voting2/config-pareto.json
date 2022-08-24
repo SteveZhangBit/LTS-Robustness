@@ -6,17 +6,17 @@
   "safety": ["p.lts"],
   "method": "supervisory",
   "options": {
-    "progress": ["v.1.done", "v.2.done", "v.3.done", "v.4.done"],
+    "progress": ["v.1.done", "v.2.done"],
     "preferredMap": {
       "3": [ ["select", "back", "select", "vote", "confirm"] ]
     },
     "controllableMap": {
-      "0": ["back", "confirm", "password", "select", "vote", "v.1.done", "v.2.done", "v.3.done", "v.4.done"],
-      "3": ["v.1.enter", "v.2.enter", "v.3.enter", "v.4.enter", "v.1.exit", "v.2.exit", "v.3.exit", "v.4.exit", "eo.1.enter", "eo.1.exit"]
+      "0": ["back", "confirm", "password", "select", "vote", "v.1.done", "v.2.done"],
+      "3": ["v.1.enter", "v.2.enter", "v.1.exit", "v.2.exit", "eo.1.enter", "eo.1.exit"]
     },
     "observableMap": {
-      "0": ["back", "confirm", "password", "select", "vote", "v.1.done", "v.2.done", "v.3.done", "v.4.done"],
-      "2": ["v.1.enter", "v.2.enter", "v.3.enter", "v.4.enter", "v.1.exit", "v.2.exit", "v.3.exit", "v.4.exit", "eo.1.enter", "eo.1.exit"]
+      "0": ["back", "confirm", "password", "select", "vote", "v.1.done", "v.2.done"],
+      "2": ["v.1.enter", "v.2.enter", "v.1.exit", "v.2.exit", "eo.1.enter", "eo.1.exit"]
     },
     "algorithm": "Pareto"
   }
