@@ -44,7 +44,7 @@ VOTE[in:WHO][sel:WHO][v:WHO] = (
 '''
 
 
-def gen_run(n, m, mode):
+def gen_run(n, m, mode, opt=True):
   enter_exits = ", ".join(
     [f'"v.{i}.enter"' for i in range(1, n+1)] +
     [f'"v.{i}.exit"' for i in range(1, n+1)] +
@@ -58,7 +58,7 @@ def gen_run(n, m, mode):
   "env": [""],
   "dev": ["env.lts"],
   "safety": ["p.lts"],
-  "method": "supervisory",
+  "method": {'"supervisory"' if opt else '"supervisory-non-opt"'},
   "options": {{
     "progress": [{dones}],
     "preferredMap": {{
@@ -129,6 +129,9 @@ if __name__ == "__main__":
   
   with open("config-pareto.json", "w") as f:
     f.write(gen_run(n, m, "Pareto"))
+  
+  with open("config-pareto-non-opt.json", "w") as f:
+    f.write(gen_run(n, m, "Pareto", opt=False))
   
   with open("config-fast.json", "w") as f:
     f.write(gen_run(n, m, "Fast"))
