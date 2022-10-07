@@ -61,6 +61,23 @@ open class NFAParallelComposition<S1, S2, I>(
     }
   }
 
+  /**
+   * I'm ignoring the input, sorry not sorry
+   */
+  override fun getStates(input: MutableIterable<I>?): MutableSet<Pair<S1, S2>> {
+    val states = mutableSetOf<Pair<S1,S2>>()
+    for (s1 in nfa1.states) {
+      for (s2 in nfa2.states) {
+        states.add(Pair(s1, s2))
+      }
+    }
+    return states
+  }
+
+  fun isAccepting(state : Pair<S1, S2>) : Boolean {
+    return nfa1.isAccepting(state.first) && nfa2.isAccepting(state.second)
+  }
+
 }
 
 fun <I> parallelComposition(nfa1: NFA<*, I>, nfa2: NFA<*, I>): NFA<Int, I> {

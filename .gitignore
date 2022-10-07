@@ -1,2 +1,4 @@
 bin/
 .python-version
+.idea
+robustifier/src/main/resources/META-INF

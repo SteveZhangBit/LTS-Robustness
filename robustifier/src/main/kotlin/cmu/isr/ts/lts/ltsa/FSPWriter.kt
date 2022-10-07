@@ -1,6 +1,7 @@
 package cmu.isr.ts.lts.ltsa
 
 import net.automatalib.automata.fsa.DFA
+import net.automatalib.automata.fsa.NFA
 import net.automatalib.commons.util.Holder
 import net.automatalib.util.ts.traversal.TSTraversal
 import net.automatalib.util.ts.traversal.TSTraversalAction
@@ -57,6 +58,74 @@ private class FSPWriterVisitor<S, I>(
     var isDeadlock = true
     for (a in inputs) {
       if (dfa.getTransition(succ, a) != null) {
+        isDeadlock = false
+        break
+      }
+    }
+    return if (isDeadlock) {
+      builder.append("$input -> STOP | ")
+      TSTraversalAction.IGNORE
+    } else {
+      builder.append("$input -> S$succ | ")
+      TSTraversalAction.EXPLORE
+    }
+  }
+
+}
+
+fun <S, I> write(output: OutputStream, nfa: NFA<S, I>, inputs: Alphabet<I>) {
+  val builder = StringBuilder()
+  val writer = output.writer()
+  TSTraversal.breadthFirst(nfa, inputs, NFAFSPWriterVisitor(builder, nfa, inputs))
+  if (builder.endsWith(" | ")) {
+    builder.setLength(builder.length - 3)
+    builder.appendLine(").")
+  }
+  else if (builder.endsWith("(")) {
+    builder.setLength(builder.length - 1)
+    builder.appendLine("STOP.")
+  }
+  writer.write(builder.toString())
+  writer.flush()
+}
+
+private class NFAFSPWriterVisitor<S, I>(
+  val builder: StringBuilder,
+  val dfa: NFA<S, I>,
+  val inputs: Alphabet<I>
+) : TSTraversalVisitor<S, I, S, Void?> {
+  private val visited = mutableSetOf<S>()
+
+  override fun processInitial(state: S, outData: Holder<Void?>): TSTraversalAction {
+    return TSTraversalAction.EXPLORE
+  }
+
+  override fun startExploration(state: S, data: Void?): Boolean {
+    return if (state !in visited) {
+      visited.add(state)
+      if (builder.endsWith(" | ")) {
+        builder.setLength(builder.length - 3)
+        builder.appendLine("),")
+      }
+      builder.append("S$state = (")
+      true
+    } else {
+      false
+    }
+  }
+
+  override fun processTransition(
+    source: S,
+    srcData: Void?,
+    input: I,
+    transition: S,
+    succ: S,
+    outData: Holder<Void?>?
+  ): TSTraversalAction {
+    // check deadlock state
+    var isDeadlock = true
+    for (a in inputs) {
+      if (dfa.getTransitions(succ, a) != null) {
         isDeadlock = false
         break
       }
