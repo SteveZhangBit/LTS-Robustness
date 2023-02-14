@@ -2,8 +2,14 @@ package cmu.isr.assumption
 
 import cmu.isr.ts.*
 import cmu.isr.ts.lts.hide
+import cmu.isr.ts.lts.ltsa.LTSACall
+import cmu.isr.ts.lts.ltsa.LTSACall.asDetLTS
+import cmu.isr.ts.lts.ltsa.LTSACall.compose
+import cmu.isr.ts.lts.ltsa.LTSACall.minimize
+import cmu.isr.ts.lts.ltsa.write
 import cmu.isr.ts.lts.makeErrorState
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
 
 class SubsetConstructionGenerator<I>(
   private val sys: LTS<*, I>,
@@ -32,7 +38,12 @@ class SubsetConstructionGenerator<I>(
     // 3. hide and determinise
     logger.info("S||P: #states = ${comp.size()}, #transitions: ${comp.numOfTransitions()}")
     logger.info("Pruning and determinising the model...")
-    val wa = hide(comp, hidden) as MutableDetLTS
+    var wa = hide(comp, hidden) as MutableDetLTS
+
+    val out = ByteArrayOutputStream()
+    out.use { write(out, wa, wa.alphabet()) }
+    wa = LTSACall.compile(out.toString()).compose().minimize().asDetLTS() as MutableDetLTS<Int, I>
+
     // 4. make sink
     if (sink) {
       val theta = wa.addState(true)
